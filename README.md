@@ -261,12 +261,340 @@ In the scenario i will access application and data security risks, identify pote
 Fabrikam Inc. Operates in Dual cloud Azure and AWS deployment with AKS(Azure Kubernetes sevices) and EKS(Amazon Elastic Kubernetes services) microservices for regional failover and performance optimisation. 
 Buisiness critical data is centralised in **Azure with SQL database for transactions** and **Cosmos DB for customer profiles**- Azure hosted data with SQL adtabase and Cosmos DB for Governance.
 Service communication relies on kubernets secrets for service communication with manual token rotation including API tokens and Connection Strings, using long lived tokens rotated manually with TLS encryption over public endpoints.
-Git hub actrions handles CI/CD with private repositories. Recent incidents included misconfigured admission policies and permissive role assignments requiring manual team coordiantion.
-Developers use open osurtce packages/dependecies with ACR base and images and developer driven security and azure container Registry base images---------relying on vulnerability monitoring and periodic rebuilds for security. Monitoring uses Azure Monitor and Microsoft Sentinel with Custom analytics.
+Git hub actions handles CI/CD with private repositories. Recent incidents included misconfigured admission policies and permissive role assignments requiring manual team coordiantion.
+Developers use open osurtce packages/dependecies with ACR base and images and developer driven security and azure container Registry base images---------relying on vulnerability monitoring and periodic rebuilds for security. 
+Monitoring uses Azure Monitor and Microsoft Sentinel with Custom analytics.
 Operation team have varying reviewing processes focused on performance and diagnostics. 
-My task as a asecurity architect is to analyse Fabrikam Inc., currenmt security posture and design a zero trust architect.
+My task as a asecurity architect is to analyse Fabrikam Inc., currenmt security posture and design a resilient zero trust architect that strengthens apps and data security without compromising operational continuity.
 
+**What Microsoft Wants me to Learn**:
+How do we protect secrets?
+How do we secure Kubernetes environments?
+How do we secure CI/CD pipelines?
+How do we detect configuration drift?
+How do we protect databases?
+How do we implement Zero Trust?
+How do we apply DevSecOps practices?
+How do we secure applications running across Azure and AWS?
 
+# 2. **Scenario**: 
+
+Explore the security architecture, and identify the challenges involved.
+
+# 2.1 **Situation assessment tab**: 
+Architecture Overview
+Developers
+    ↓
+GitHub Repos
+    ↓
+GitHub Actions (CI/CD)
+    ↓
+Container Images
+    ↓
+Azure Container Registry (ACR)
+    ↓
+AKS (Azure)
+    ↓
+Applications & Databases
+
+           ↘
+            EKS (AWS)
+
+At the same time, user identities and access are managed through Microsoft Entra ID.
+
+1. Identity Layer (Who Can Access?)
+
+On the right side is the identity system:
+
+Microsoft Entra Tenant
+
+This is the organization's central identity provider.
+
+Components shown:
+
+Users
+App Registrations
+Enterprise Applications
+Conditional Access
+Entra MFA
+Security Purpose
+Users
+
+Employee identities.
+
+Example:
+
+Alice
+Bob
+Charlie
+
+These users authenticate through Entra ID.
+
+Entra MFA
+
+Multi-Factor Authentication.
+
+Instead of:
+
+Password only
+
+Use:
+
+Password
++
+Phone approval
+
+Even if a password is stolen, attackers still need the second factor.
+
+Conditional Access
+
+Controls who gets access and under what conditions.
+
+Example:
+
+Allow:
+✓ Managed device
+✓ India
+✓ MFA completed
+
+Block:
+✗ Unknown country
+✗ Unmanaged device
+
+This is a core Zero Trust control.
+
+App Registrations
+
+Applications themselves get identities.
+
+Example:
+
+Inventory App
+Payment API
+Reporting Service
+
+Applications can securely authenticate to Azure services.
+
+Enterprise Applications
+
+Third-party or SaaS applications integrated with Entra ID.
+
+Examples:
+
+Salesforce
+ServiceNow
+GitHub
+2. DevOps Layer
+
+Bottom-left:
+
+GitHub Repositories
+
+Source code storage.
+
+Example:
+
+Frontend code
+Backend APIs
+Infrastructure templates
+
+Risk:
+
+Hardcoded secrets
+Vulnerable code
+Malicious commits
+GitHub Actions
+
+CI/CD automation.
+
+Workflow:
+
+Developer pushes code
+        ↓
+Build
+        ↓
+Test
+        ↓
+Create container image
+        ↓
+Deploy
+
+Risk:
+
+Secret exposure
+Pipeline manipulation
+Unauthorized deployments
+3. Container Registry
+Azure Container Registry (ACR)
+
+Stores container images.
+
+myapp:v1
+myapp:v2
+myapp:v3
+
+Before deployment, AKS pulls images from ACR.
+
+Security concern:
+
+If vulnerable images are stored here, vulnerabilities are deployed everywhere.
+
+4. Kubernetes Layer
+AKS (Azure Kubernetes Service)
+
+Runs containerized microservices in Azure.
+
+Example:
+
+Authentication Service
+Order Service
+Payment Service
+EKS (Amazon Elastic Kubernetes Service)
+
+Runs Kubernetes workloads in AWS.
+
+Fabrikam is therefore:
+
+Multicloud
+
+because workloads exist in:
+
+Azure
+AWS
+5. Data Layer
+Azure SQL Database
+
+Structured relational data.
+
+Example:
+
+Customers
+Orders
+Invoices
+Azure Cosmos DB
+
+NoSQL database.
+
+Good for:
+
+Global applications
+Large-scale data
+Flexible schemas
+6. Security Monitoring Layer
+Microsoft Defender for Cloud
+
+Cloud Security Posture Management (CSPM).
+
+Detects:
+
+Misconfigurations
+Vulnerabilities
+Exposed resources
+
+Example:
+
+Public database endpoint detected
+Microsoft Sentinel
+
+SIEM + SOAR platform.
+
+Collects logs from:
+
+AKS
+EKS
+Azure
+AWS
+Entra ID
+
+Detects attacks and suspicious behavior.
+
+Example:
+
+Impossible travel login
+Privilege escalation
+Credential theft
+Azure Monitor
+
+Operational monitoring.
+
+Tracks:
+
+CPU
+Memory
+Application performance
+Logs
+
+Useful for troubleshooting and incident investigations.
+
+What Security Weaknesses Are Likely Present?
+
+The scenario description already hinted at several problems:
+
+1. Manual Secret Rotation
+
+Likely issue:
+
+Passwords/API keys
+stored manually
+
+Risk:
+
+Credential leaks
+Stale secrets
+2. Weak CI/CD Controls
+
+GitHub Actions may lack:
+
+Secret scanning
+Code scanning
+Approval gates
+
+Risk:
+
+Compromised pipeline
+        ↓
+Malicious deployment
+3. Public Databases
+
+Azure SQL or Cosmos DB may be internet-accessible.
+
+Risk:
+
+Internet
+     ↓
+Database
+
+Instead of:
+
+Application
+     ↓
+Private Database
+4. Configuration Drift
+
+AKS, EKS, databases, and identities may not consistently follow security policies.
+
+Risk:
+
+Open ports
+Excessive permissions
+Disabled security controls
+Zero Trust Assessment
+
+The architecture already contains some Zero Trust components:
+
+✅ Entra MFA
+✅ Conditional Access
+✅ Centralized Identity
+✅ Defender for Cloud
+✅ Sentinel
+
+However, it still appears to need:
+
+❌ Strong secret management
+❌ Private database access
+❌ Consistent policy enforcement across Azure and AWS
+❌ Secure CI/CD controls
+❌ Automated compliance monitoring
 
 
 
